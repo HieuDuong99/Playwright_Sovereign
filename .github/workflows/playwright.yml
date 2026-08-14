@@ -1,0 +1,47 @@
+name: Playwright automation pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to run tests'
+        required: true
+        default: 'DEV'
+        type: choice
+        options:
+          - DEV
+          - QA
+      project:
+        description: 'Project to run tests'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - chromium
+      testsuites:
+        description: 'Testsuites to run. Use space to separate multiple testsuites. Testsuites can be a file `tests/todo-page.spec.ts` or folders `tests/todo-page/ tests/landing-page/`'
+        required: true
+        default: '*'
+        type: string
+
+  push:
+    branches: [master]
+  
+  pull_request:
+    branches: [master]
+
+jobs:
+  playwright-tests-workflow-dispatch:
+    if: github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/workflow_call.yml
+    secrets: inherit
+    with:
+      environment: ${{ github.event.inputs.environment }}
+      project: ${{ github.event.inputs.project }}
+      testsuites: ${{ github.event.inputs.testsuites }}
+
+  playwright-tests:
+    if: github.event_name != 'workflow_dispatch'
+    uses: ./.github/workflows/workflow_call.yml
+    secrets: inherit

@@ -1,0 +1,27 @@
+{
+  "name": "myvip-auto-playwright",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:auth": "npx playwright test test-suites/authentication/auth.suite.ts",
+    "test:navigation": "npx playwright test test-suites/navigation/navigation.suite.ts",
+    "test:ui": "npx playwright test test-suites/ui-components/ui.suite.ts",
+    "test:smoke": "npx playwright test test-suites/smoke-tests/smoke.suite.ts",
+    "test:regression": "npx playwright test test-suites/regression/regression.suite.ts",
+    "test:all-suites": "npx playwright test test-suites/all-suites.ts",
+    "test:suites": "npx playwright test test-suites/",
+    "test:headed": "npx playwright test --headed",
+    "test:debug": "npx playwright test --debug",
+    "test:report": "npx playwright show-report"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.54.1",
+    "@types/node": "^24.13.3",
+    "tsx": "^4.20.3"
+  }
+}

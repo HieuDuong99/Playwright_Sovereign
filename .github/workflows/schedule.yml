@@ -1,0 +1,13 @@
+name: Playwright Schedule
+on:
+  schedule:
+    - cron: "0 10 * * 1" # Every Monday at 10:00 UTC
+
+jobs:
+  playwright-tests-all-dev:
+    uses: ./.github/workflows/workflow_call.yml
+    secrets: inherit
+    with:
+      environment: "DEV"
+      project: "all"
+      testsuites: "*"

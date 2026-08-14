@@ -1,0 +1,89 @@
+name: Playwright workflow call
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: "Environment to run tests: DEV, QA"
+        default: "DEV"
+        type: string
+      project:
+        description: "Project to run tests: all, chromium"
+        default: "all"
+        type: string
+      testsuites:
+        description: "Testsuites to run. Use space to separate multiple testsuites. Testsuites can be a file `tests/todo-page.spec.ts` or folders `tests/todo-page/ tests/landing-page/`"
+        default: "*"
+        type: string
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      project-matrix: ${{ steps.set.outputs.project-matrix }}
+    steps:
+      - name: Set project matrix based on input
+        id: set
+        run: |
+          if [[ "${{ inputs.project }}" == "all" ]]; then
+            echo 'project-matrix=["chromium"]' >> $GITHUB_OUTPUT
+          else
+            echo "project-matrix=[\"${{ inputs.project }}\"]" >> $GITHUB_OUTPUT
+          fi
+
+  playwright-tests:
+    needs: prepare
+    runs-on: medium
+    environment: ${{ inputs.environment }}
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ${{ fromJSON(needs.prepare.outputs.project-matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright ${{ matrix.project }} tests
+        env:
+          BASE_URL: ${{ vars.BASE_URL }}
+          TEST_ENV: ${{ inputs.environment }}
+          TEST_SUITES: ${{ inputs.testsuites }}
+          DISPLAY: :99
+        run: |
+          echo "Running with TEST_ENV=$TEST_ENV and TEST_SUITES=$TEST_SUITES"
+          npx playwright test --project=${{ matrix.project }} --reporter html $TEST_SUITES
+
+      - name: Upload ${{ matrix.project }} report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.project }}
+          path: playwright-report/
+          retention-days: 14
+
+  notify-slack:
+    needs: playwright-tests
+    if: ${{ always()}}
+    uses: ./.github/workflows/notify_slack.yml
+    secrets:
+      SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+    with:
+      workflow: ${{ github.workflow }}
+      workflowRunId: ${{ github.run_id }}
+      workflowRunNumber: ${{ github.run_number }}
+      status: ${{ needs.playwright-tests.result }}
+      environment: ${{ inputs.environment }}
+      user: ${{ github.actor }}
+      repository: ${{ github.repository }}
+      branch: ${{ github.ref_name }}
+      commitSha: ${{ github.sha }}
+      slackChannelId: "C092T9SC560" # myvip-automation

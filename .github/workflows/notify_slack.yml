@@ -1,0 +1,124 @@
+name: Notify Slack
+on:
+  workflow_call:
+    secrets:
+      SLACK_TOKEN:
+        required: true
+        description: "Slack token for sending messages"
+    inputs:
+      workflow:
+        description: "The name of the workflow"
+        type: string
+      status:
+        description: "The status of the workflow"
+        type: string
+      repository:
+        description: "The repository for the build"
+        type: string
+      environment:
+        description: "The environment for the build"
+        type: string
+      user:
+        description: "The user who triggered the workflow"
+        type: string
+      branch:
+        description: "The branch for the build"
+        type: string
+      commitSha:
+        description: "The commit SHA for the build"
+        type: string
+      workflowRunId:
+        description: "The workflow ID for the build"
+        type: string
+      workflowRunNumber:
+        description: "The workflow number for the build"
+        type: string
+      slackChannelId:
+        description: "The Slack channel ID to send the message to"
+        type: string
+
+jobs:
+  notify-slack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Gather info
+        id: info
+        run: |
+          if [ "${{ inputs.status }}" == "success" ]; then
+            echo "Pipeline status: Success"
+            echo "conclusion=succeeded:white_check_mark:" >> "$GITHUB_OUTPUT"
+          elif [ "${{ inputs.status }}" == "failure" ]; then
+            echo "Pipeline status: Failure"
+            echo "conclusion=FAILED:x:" >> "$GITHUB_OUTPUT"
+          elif [ "${{ inputs.status }}" == "cancelled" ]; then
+            echo "Pipeline status: Cancelled"
+            echo "conclusion='been cancelled ⚠️'" >> "$GITHUB_OUTPUT"
+          else
+            echo "Something went wrong"
+            echo "conclusion=wrong:heavy_multiplication_x:" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Getting short SHA"
+          short_sha=$(echo -n "${{ inputs.commitSha}}" | cut -c1-7)
+          echo "short_sha=$short_sha" >> "$GITHUB_OUTPUT"
+          echo "Done"
+
+      - name: Notify Slack
+        id: notify-slack
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          token: ${{ secrets.SLACK_TOKEN }}
+          method: chat.postMessage
+          payload: |
+            {
+              "channel": "${{ inputs.slackChannelId }}",
+              "color": "#36a64f",
+              "text": ${{ github.workflow }},
+              "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*Workflow ${{ inputs.workflow }}* has ${{ steps.info.outputs.conclusion }}"
+                }
+              },
+              {
+                "type": "section",
+                "fields": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Triggered by:* ${{ inputs.user }}"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Workflow:* <https://github.com/${{ inputs.repository }}/actions/runs/${{ inputs.workflowRunId }}|${{ inputs.workflowRunNumber }}>"
+                  }
+                ]
+              },
+              {
+                "type": "section",
+                "fields": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Environment:* <https://github.com/${{ inputs.repository }}/deployments/${{ inputs.environment }}|${{ inputs.environment }}>"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Commit:* <https://github.com/${{ inputs.repository }}/commit/${{ inputs.commitSha }}|`${{ steps.info.outputs.short_sha }}`>"
+                  }
+                ]
+              },
+              {
+                "type": "section",
+                "fields": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Branch or PR number:*\n${{ inputs.branch }}"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Repository:*\n<https://github.com/${{ inputs.repository }}|${{ inputs.repository }}>"
+                  }
+                ]
+              }
+              ]
+            }
