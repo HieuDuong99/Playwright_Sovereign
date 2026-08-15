@@ -1,0 +1,52 @@
+name: Notify Telegram
+
+on:
+  workflow_call:
+    inputs:
+      workflow:
+        required: true
+        type: string
+      status:
+        required: true
+        type: string
+      environment:
+        required: false
+        type: string
+        default: "DEV"
+    secrets:
+      TELEGRAM_BOT_TOKEN:
+        required: true
+      TELEGRAM_CHAT_ID:
+        required: true
+
+jobs:
+  send-telegram:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Telegram Message
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          STATUS: ${{ inputs.status }}
+        run: |
+          if [ "$STATUS" = "success" ]; then
+            EMOJI="✅ SUCCESS"
+          elif [ "$STATUS" = "failure" ]; then
+            EMOJI="❌ FAILURE"
+          else
+            EMOJI="⚠️ $STATUS"
+          fi
+
+          MESSAGE="$EMOJI *Playwright Automation Test Report*
+
+          • *Workflow:* \`${{ inputs.workflow }}\`
+          • *Environment:* \`${{ inputs.environment }}\`
+          • *Repository:* \`${{ github.repository }}\`
+          • *Branch:* \`${{ github.ref_name }}\`
+          • *Triggered by:* \`${{ github.actor }}\`
+          • *Details:* [View Workflow Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d "chat_id=${TELEGRAM_CHAT_ID}" \
+            -d "text=${MESSAGE}" \
+            -d "parse_mode=Markdown"
