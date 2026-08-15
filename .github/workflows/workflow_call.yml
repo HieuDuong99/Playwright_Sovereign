@@ -33,7 +33,7 @@ jobs:
 
   playwright-tests:
     needs: prepare
-    runs-on: medium
+    runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     strategy:
       fail-fast: false
@@ -70,20 +70,34 @@ jobs:
           path: playwright-report/
           retention-days: 14
 
-  notify-slack:
+  notify-telegram:
     needs: playwright-tests
-    if: ${{ always()}}
-    uses: ./.github/workflows/notify_slack.yml
-    secrets:
-      SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
-    with:
-      workflow: ${{ github.workflow }}
-      workflowRunId: ${{ github.run_id }}
-      workflowRunNumber: ${{ github.run_number }}
-      status: ${{ needs.playwright-tests.result }}
-      environment: ${{ inputs.environment }}
-      user: ${{ github.actor }}
-      repository: ${{ github.repository }}
-      branch: ${{ github.ref_name }}
-      commitSha: ${{ github.sha }}
-      slackChannelId: "C092T9SC560" # myvip-automation
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Telegram Notification
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          STATUS: ${{ needs.playwright-tests.result }}
+        run: |
+          if [ "$STATUS" = "success" ]; then
+            EMOJI="✅ SUCCESS"
+          elif [ "$STATUS" = "failure" ]; then
+            EMOJI="❌ FAILURE"
+          else
+            EMOJI="⚠️ $STATUS"
+          fi
+
+          MESSAGE="$EMOJI *Playwright Automation Test Report*
+
+          • *Repository:* \`${{ github.repository }}\`
+          • *Branch:* \`${{ github.ref_name }}\`
+          • *Environment:* \`${{ inputs.environment }}\`
+          • *Triggered by:* \`${{ github.actor }}\`
+          • *Details:* [View Workflow Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d "chat_id=${TELEGRAM_CHAT_ID}" \
+            -d "text=${MESSAGE}" \
+            -d "parse_mode=Markdown"
