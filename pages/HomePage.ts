@@ -6,6 +6,7 @@ export class HomePage extends BasePage
   readonly logo: Locator;
   readonly signupLoginLink: Locator;
 
+
   constructor(page: Page) {
     super(page);
     this.logo = page.locator('.logo');
@@ -25,4 +26,13 @@ export class HomePage extends BasePage
   async navigateToSignupLogin() {
     await this.signupLoginLink.click();
   }
+  async verifyHomePageVisible() {
+    await expect(this.page).toHaveTitle(/Automation Exercise/);
+  }
+
+  async clickSignupLogin() {
+    await this.signupLoginLink.click();
+  }
+
+
 }

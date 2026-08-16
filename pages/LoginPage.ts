@@ -1,7 +1,15 @@
 import { expect, Locator, Page } from '@playwright/test';
 import { BasePage } from './BasePage';
+import { HomePage } from './HomePage';
+import {userData} from '../utils/testData';
 
 export class LoginPage extends BasePage {
+  //Form Login 
+  readonly signInEmail : Locator;
+  readonly signInPassword : Locator;
+  readonly signInButton : Locator;
+
+
   // --- FORM SIGNUP BƯỚC 1 (Tại /login) ---
   readonly signupHeading: Locator;
   readonly signupNameInput: Locator;
@@ -38,6 +46,10 @@ export class LoginPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
+    //SignIn bước 1
+    this.signInEmail= page.locator('input[data-qa="login-email"]');
+    this.signInPassword = page.locator('input[data-qa="login-password"]');
+    this.signInButton =  page.getByRole('button', { name: 'Login' });
 
     // Locators Signup Bước 1
     this.signupHeading = page.getByRole('heading', { name: 'New User Signup!' });
@@ -120,6 +132,10 @@ export class LoginPage extends BasePage {
     await this.mobileInput.fill(addressData.mobile);
     await this.createAccountButton.click();
   }
+ async goto() {
+    await this.blockAds();
+    await this.page.goto('http://automationexercise.com/login');
+  }
 
   // 4. Verify thông báo "ACCOUNT CREATED!" và nhấn nút Continue
   async verifyAccountCreatedAndContinue() {
@@ -139,4 +155,14 @@ export class LoginPage extends BasePage {
     await expect(this.accountDeletedHeading).toBeVisible();
     await this.continueButton.click();
   }
+  // Trong file pages/LoginPage.ts
+  
+  async login(email: string, password: string) {
+    await this.signInEmail.fill(email);
+    await this.signInPassword.fill(password);
+    await this.signInButton.click();
+
+  
+}
+ 
 }
