@@ -28,4 +28,10 @@ test.describe('Login Functionality', () => {
     // 3. Click xóa tài khoản (nếu cần trong kịch bản)
    // await header.clickDeleteAccount();
   });
-});
+  test('TC01 - Đăng nhập  với tài khoản không hợp lệ', async ({page}) => {
+    
+    
+    await loginPage.login(userData.inValidUser.email, userData.inValidUser.password);
+    await loginPage.verifyinlineMessageDisplay();
+  });
+})

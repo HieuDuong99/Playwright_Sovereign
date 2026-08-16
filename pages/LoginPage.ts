@@ -43,6 +43,8 @@ export class LoginPage extends BasePage {
   readonly accountDeletedHeading: Locator;
   readonly continueButton: Locator;
   readonly deleteAccountLink: Locator;
+  //login Failed
+  readonly inLineMessage : Locator;
 
   constructor(page: Page) {
     super(page);
@@ -85,6 +87,8 @@ export class LoginPage extends BasePage {
     this.accountDeletedHeading = page.locator('b', { hasText: 'ACCOUNT DELETED!' });
     this.continueButton = page.locator('a[data-qa="continue-button"]');
     this.deleteAccountLink = page.getByRole('link', { name: ' Delete Account' });
+    //login failed
+    this.inLineMessage =  page.getByText('Your email or password is incorrect!')
   }
 
   // 1. Điền thông tin Signup bước 1 (Name & Email)
@@ -164,5 +168,9 @@ export class LoginPage extends BasePage {
 
   
 }
+  async verifyinlineMessageDisplay(){
+    await expect(this.inLineMessage).toBeVisible(); 
+  }
+
  
 }
