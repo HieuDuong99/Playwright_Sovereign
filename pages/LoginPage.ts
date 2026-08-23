@@ -15,6 +15,7 @@ export class LoginPage extends BasePage {
   readonly signupNameInput: Locator;
   readonly signupEmailInput: Locator;
   readonly signupButton: Locator;
+  readonly existingUserMessage: Locator;
 
   // --- FORM SIGNUP BƯỚC 2 (Tại /signup) ---
   readonly enterAccountInfoHeading: Locator;
@@ -58,6 +59,7 @@ export class LoginPage extends BasePage {
     this.signupNameInput = page.locator('input[data-qa="signup-name"]');
     this.signupEmailInput = page.locator('input[data-qa="signup-email"]');
     this.signupButton = page.locator('button[data-qa="signup-button"]');
+    this.existingUserMessage = page.getByText('Email Address already exist!');
 
     // Locators Signup Bước 2 (Thông tin cá nhân)
     this.enterAccountInfoHeading = page.getByText('Enter Account Information');
@@ -165,6 +167,13 @@ export class LoginPage extends BasePage {
     await this.signInEmail.fill(email);
     await this.signInPassword.fill(password);
     await this.signInButton.click();
+
+  
+}
+  async register(name  : string, email: string) {
+    await this.signupNameInput.fill(name );
+    await this.signupEmailInput.fill(email);
+    await this.signupButton.click();
 
   
 }

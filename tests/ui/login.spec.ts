@@ -34,4 +34,4 @@ test.describe('Login Functionality', () => {
     await loginPage.login(userData.inValidUser.email, userData.inValidUser.password);
     await loginPage.verifyinlineMessageDisplay();
   });
-})
+}) 

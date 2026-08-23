@@ -16,9 +16,21 @@ export default defineConfig({
     video: 'retain-on-failure',
   },
   projects: [
+    // 1. Setup Project: Chạy file auth.setup.ts đầu tiên
+    {
+      name: 'setup',
+      testMatch: /.*\.setup\.ts/,
+    },
+
+    // 2. Main Test Project: Sử dụng storageState từ bước setup
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        // Nạp tự động storageState cho mọi bài test trong project này
+        storageState: '.auth/user.json',
+      },
+      dependencies: ['setup'], // Ép Playwright phải chạy 'setup' hoàn tất trước
     },
   ],
 });

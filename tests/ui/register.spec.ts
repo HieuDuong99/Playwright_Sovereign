@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { HomePage } from '../../pages/HomePage';   // 👈 Khớp tên Class HomePage và đường dẫn lùi 2 cấp
 import { LoginPage } from '../../pages/LoginPage'; // 👈 Khớp tên Class LoginPage và đường dẫn lùi 2 cấp
-
+import {userData} from '../../utils/testData';
+test.use({ storageState: { cookies: [], origins: [] } });
 test.describe('Automation Exercise - Registration Flow', () => {
 
   test('TC01: Register User and Delete Account (POM Standard)', async ({ page }) => {
@@ -53,5 +54,14 @@ test.describe('Automation Exercise - Registration Flow', () => {
     // 17 - 18. Bấm 'Delete Account' & Verify 'ACCOUNT DELETED!' thành công
     await loginPage.deleteAccountAndContinue();
   });
+  test('TC02: Register email đã tồn tại', async ({ page }) => {
+      const homePage = new HomePage(page);
+      const loginPage = new LoginPage(page);
+      await loginPage.goto();
+      await loginPage.register(userData.validUser.username, userData.validUser.email);
+      await expect(loginPage.existingUserMessage).toBeVisible();
+
+  });
+
 
 });
