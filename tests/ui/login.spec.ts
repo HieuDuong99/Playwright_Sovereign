@@ -3,6 +3,7 @@ import { HomePage } from '../../pages/HomePage';
 import { LoginPage } from '../../pages/LoginPage';
 import { HeaderComponent } from '../../pages/HeaderComponent';
 import {userData} from '../../utils/testData';
+test.use({ storageState: { cookies: [], origins: [] } });
 
 test.describe('Login Functionality', () => {
   let loginPage: LoginPage;
